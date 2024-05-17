@@ -9,8 +9,8 @@ import (
 func (h *Handler) initOrdersRoutes(api chi.Router) {
 	api.Route("/orders", func(r chi.Router) {
 		r.Get("/", h.GetOrders)
+		r.Get("/{uid}", h.GetOrderByID)
 	})
-	api.Get("/{uid}/", h.GetOrderByID)
 }
 
 func (h *Handler) GetOrders(w http.ResponseWriter, r *http.Request) {

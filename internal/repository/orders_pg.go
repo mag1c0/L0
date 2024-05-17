@@ -83,7 +83,7 @@ func (r *OrdersRepo) GetByID(ctx context.Context, uid string) (*domain.Order, er
 
 	var order domain.Order
 
-	err = r.db.DB().ScanAllContext(ctx, &order, q, args...)
+	err = r.db.DB().ScanOneContext(ctx, &order, q, args...)
 	if err != nil {
 		return nil, err
 	}
