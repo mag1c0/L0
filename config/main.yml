@@ -1,0 +1,17 @@
+http:
+  port: 8000
+  maxHeaderBytes: 1
+  readTimeout: 10s
+  writeTimeout: 10s
+
+postgres:
+  db: wbdb
+  user: wbdb
+  password: dbwb
+  dsn: "host=localhost port=5432 dbname=wbdb user=wbdb password=dbwb sslmode=disable"
+
+nats:
+  url: 'nats://localhost:4222'
+  clusterID: 'test-cluster'
+  clientID: "order-listener"
+  subject: "order-notification"
