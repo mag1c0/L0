@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/mag1c0/L0/internal/config"
+	"github.com/mag1c0/L0/internal/delivery/amqp"
 	delivery "github.com/mag1c0/L0/internal/delivery/http"
 	"github.com/mag1c0/L0/internal/generator"
 	"github.com/mag1c0/L0/internal/repository"
@@ -52,6 +53,10 @@ func Run(ctx context.Context, configPath string) {
 		Repos: repos,
 	})
 	handlers := delivery.NewHandler(services)
+	consumers := amqp.NewConsumer(amqp.Deps{
+		Services: services,
+		Stan:     nsClient.Sc,
+	})
 
 	go func() {
 		for {
@@ -59,7 +64,7 @@ func Run(ctx context.Context, configPath string) {
 			fmt.Println("Generated order:", order.OrderUID)
 			orderJson, err := json.Marshal(order)
 			if err != nil {
-				fmt.Printf("error marshalling order %v", err)
+				fmt.Printf("Error marshalling order %v", err)
 			}
 
 			err = nsClient.Sc.Publish(cfg.NATS.Subject, orderJson)
@@ -67,6 +72,14 @@ func Run(ctx context.Context, configPath string) {
 				fmt.Printf("Error publish: %v\n", err)
 			}
 			time.Sleep(5 * time.Second)
+		}
+	}()
+
+	go func() {
+		for {
+			if err := consumers.Orders.Subscribe(cfg.NATS.Subject); err != nil {
+				fmt.Printf("Failed to subscribe to subject %s", err)
+			}
 		}
 	}()
 
