@@ -9,7 +9,7 @@ import (
 type Orders interface {
 	GetByID(ctx context.Context, uid string) (*domain.Order, error)
 	GetAll(ctx context.Context) (*[]domain.Order, error)
-	CreateOrder(ctx context.Context, order domain.Order) error
+	CreateOrder(ctx context.Context, order *domain.Order) error
 }
 
 type Services struct {

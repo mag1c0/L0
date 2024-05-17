@@ -26,7 +26,7 @@ func (c *OrdersConsumer) Subscribe(ctx context.Context, subject string) error {
 			fmt.Println("Failed to unmarshal json")
 			return
 		}
-		if err := c.service.CreateOrder(ctx, order); err != nil {
+		if err := c.service.CreateOrder(ctx, &order); err != nil {
 			fmt.Println("Failed to create order")
 			return
 		}

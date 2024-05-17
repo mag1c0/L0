@@ -8,8 +8,7 @@ import (
 )
 
 const (
-	tableName = "orders"
-
+	ordersTableName         = "orders"
 	orderUidColumn          = "order_uid"
 	trackNumberColumn       = "track_number"
 	entryColumn             = "entry"
@@ -22,14 +21,16 @@ const (
 	dateCreatedColumn       = "date_created"
 	oofShardColumn          = "oof_shard"
 
-	nameColumn    = "name"
-	phoneColumn   = "phone"
-	zipColumn     = "zip"
-	cityColumn    = "city"
-	addressColumn = "address"
-	regionColumn  = "region"
-	emailColumn   = "email"
+	deliveriesTableName = "order_deliveries"
+	nameColumn          = "name"
+	phoneColumn         = "phone"
+	zipColumn           = "zip"
+	cityColumn          = "city"
+	addressColumn       = "address"
+	regionColumn        = "region"
+	emailColumn         = "email"
 
+	paymentsTableName  = "order_payments"
 	transactionColumn  = "transaction"
 	requestIdColumn    = "request_id"
 	currencyColumn     = "currency"
@@ -41,6 +42,7 @@ const (
 	goodsTotalColumn   = "goods_total"
 	customFeeColumn    = "custom_fee"
 
+	itemsTableName    = "order_items"
 	idProductColumn   = "id"
 	chrtIdColumn      = "chrt_id"
 	priceColumn       = "price"
@@ -67,7 +69,7 @@ func NewOrdersRepo(db db.Client) *OrdersRepo {
 func (r *OrdersRepo) GetByID(ctx context.Context, uid string) (*domain.Order, error) {
 	builder := sq.Select(orderUidColumn, trackNumberColumn, entryColumn, localeColumn, internalSignatureColumn, customerIdColumn, deliveryServiceColumn, shardkeyColumn, smIdColumn, dateCreatedColumn, oofShardColumn).
 		PlaceholderFormat(sq.Dollar).
-		From(tableName).
+		From(ordersTableName).
 		Where(sq.Eq{orderUidColumn: uid}).
 		Limit(1)
 
@@ -94,7 +96,7 @@ func (r *OrdersRepo) GetByID(ctx context.Context, uid string) (*domain.Order, er
 func (r *OrdersRepo) GetAll(ctx context.Context) (*[]domain.Order, error) {
 	builder := sq.Select(orderUidColumn, trackNumberColumn, entryColumn, localeColumn, internalSignatureColumn, customerIdColumn, deliveryServiceColumn, shardkeyColumn, smIdColumn, dateCreatedColumn, oofShardColumn).
 		PlaceholderFormat(sq.Dollar).
-		From(tableName)
+		From(ordersTableName)
 
 	query, args, err := builder.ToSql()
 	if err != nil {
@@ -116,8 +118,8 @@ func (r *OrdersRepo) GetAll(ctx context.Context) (*[]domain.Order, error) {
 	return &list, nil
 }
 
-func (r *OrdersRepo) CreateOrder(ctx context.Context, order domain.Order) error {
-	builder := sq.Insert(tableName).
+func (r *OrdersRepo) CreateOrder(ctx context.Context, order *domain.Order) error {
+	builder := sq.Insert(ordersTableName).
 		PlaceholderFormat(sq.Dollar).
 		Columns(orderUidColumn, trackNumberColumn, entryColumn, localeColumn, internalSignatureColumn, customerIdColumn, deliveryServiceColumn, shardkeyColumn, smIdColumn, dateCreatedColumn, oofShardColumn).
 		Values(order.OrderUID, order.TrackNumber, order.Entry, order.Locale, order.InternalSignature, order.CustomerId, order.DeliveryService, order.ShardKey, order.SmId, order.DateCreated, order.OofShard)
@@ -128,13 +130,102 @@ func (r *OrdersRepo) CreateOrder(ctx context.Context, order domain.Order) error 
 	}
 
 	q := db.Query{
-		Name:     "orders_repository.Create",
+		Name:     "orders_repository.CreateOrder",
 		QueryRaw: query,
 	}
 
 	_, err = r.db.DB().ExecContext(ctx, q, args...)
 	if err != nil {
 		return err
+	}
+
+	err = r.CreateOrderDelivery(ctx, order)
+	if err != nil {
+		return err
+	}
+
+	err = r.CreateOrderPayment(ctx, order)
+	if err != nil {
+		return err
+	}
+
+	err = r.CreateOrderItem(ctx, order)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *OrdersRepo) CreateOrderDelivery(ctx context.Context, order *domain.Order) error {
+	builder := sq.Insert(deliveriesTableName).
+		PlaceholderFormat(sq.Dollar).
+		Columns(orderUidColumn, nameColumn, phoneColumn, zipColumn, cityColumn, addressColumn, regionColumn, emailColumn).
+		Values(order.OrderUID, order.Delivery.Name, order.Delivery.Phone, order.Delivery.Zip, order.Delivery.City, order.Delivery.Address, order.Delivery.Region, order.Delivery.Email)
+
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return err
+	}
+
+	q := db.Query{
+		Name:     "orders_repository.CreateOrderDelivery",
+		QueryRaw: query,
+	}
+
+	_, err = r.db.DB().ExecContext(ctx, q, args...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *OrdersRepo) CreateOrderPayment(ctx context.Context, order *domain.Order) error {
+	builder := sq.Insert(paymentsTableName).
+		PlaceholderFormat(sq.Dollar).
+		Columns(transactionColumn, requestIdColumn, currencyColumn, providerColumn, amountColumn, paymentDtColumn, bankColumn, deliveryCostColumn, goodsTotalColumn, customFeeColumn).
+		Values(order.OrderUID, order.Payment.RequestId, order.Payment.Currency, order.Payment.Provider, order.Payment.PaymentDt, order.Payment.Bank, order.Payment.DeliveryCost, order.Payment.GoodsTotal, order.Payment.CustomFee)
+
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return err
+	}
+
+	q := db.Query{
+		Name:     "orders_repository.CreateOrderPayment",
+		QueryRaw: query,
+	}
+
+	_, err = r.db.DB().ExecContext(ctx, q, args...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *OrdersRepo) CreateOrderItem(ctx context.Context, order *domain.Order) error {
+	for _, item := range order.Items {
+		builder := sq.Insert(itemsTableName).
+			PlaceholderFormat(sq.Dollar).
+			Columns(orderUidColumn, chrtIdColumn, trackNumberColumn, priceColumn, ridColumn, nameProductColumn, saleColumn, sizeColumn, totalPriceColumn, nmIdColumn, brandColumn, statusColumn).
+			Values(order.OrderUID, item.ChrtId, item.TrackNumber, item.Price, item.Rid, item.Name, item.Sale, item.Size, item.TotalPrice, item.NmId, item.Brand, item.Status)
+
+		query, args, err := builder.ToSql()
+		if err != nil {
+			return err
+		}
+
+		q := db.Query{
+			Name:     "orders_repository.CreateOrderItem",
+			QueryRaw: query,
+		}
+
+		_, err = r.db.DB().ExecContext(ctx, q, args...)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

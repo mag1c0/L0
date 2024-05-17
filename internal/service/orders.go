@@ -22,6 +22,6 @@ func (s *OrdersService) GetAll(ctx context.Context) (*[]domain.Order, error) {
 	return s.repo.GetAll(ctx)
 }
 
-func (s *OrdersService) CreateOrder(ctx context.Context, order domain.Order) error {
+func (s *OrdersService) CreateOrder(ctx context.Context, order *domain.Order) error {
 	return s.repo.CreateOrder(ctx, order)
 }
