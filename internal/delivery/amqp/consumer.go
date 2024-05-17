@@ -1,12 +1,13 @@
 package amqp
 
 import (
+	"context"
 	"github.com/mag1c0/L0/internal/service"
 	"github.com/nats-io/stan.go"
 )
 
 type Orders interface {
-	Subscribe(subject string) error
+	Subscribe(ctx context.Context, subject string) error
 }
 
 type Consumer struct {

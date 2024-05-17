@@ -38,7 +38,6 @@ func Run(ctx context.Context, configPath string) {
 	if err != nil {
 		log.Fatalf("Ping pgdb error: %s", err.Error())
 	}
-
 	fmt.Println("Postgresql connection success")
 
 	nsClient, err := nats.New(cfg.NATS.Url, cfg.NATS.ClusterID, cfg.NATS.ClientID)
@@ -76,10 +75,8 @@ func Run(ctx context.Context, configPath string) {
 	}()
 
 	go func() {
-		for {
-			if err := consumers.Orders.Subscribe(cfg.NATS.Subject); err != nil {
-				fmt.Printf("Failed to subscribe to subject %s", err)
-			}
+		if err := consumers.Orders.Subscribe(ctx, cfg.NATS.Subject); err != nil {
+			fmt.Printf("Failed to subscribe to subject %s", err)
 		}
 	}()
 

@@ -18,19 +18,19 @@ func NewOrdersConsumer(service service.Orders, stan stan.Conn) *OrdersConsumer {
 	return &OrdersConsumer{service: service, stan: stan}
 }
 
-func (c *OrdersConsumer) Subscribe(subject string) error {
+func (c *OrdersConsumer) Subscribe(ctx context.Context, subject string) error {
 	_, err := c.stan.Subscribe(subject, func(msg *stan.Msg) {
-		fmt.Println("received message")
+		fmt.Println("Received message")
 		var order domain.Order
 		if err := json.Unmarshal(msg.Data, &order); err != nil {
-			fmt.Println("failed to unmarshal json")
+			fmt.Println("Failed to unmarshal json")
 			return
 		}
-		if err := c.service.CreateOrder(context.Background(), order); err != nil {
-			fmt.Println("failed to create order")
+		if err := c.service.CreateOrder(ctx, order); err != nil {
+			fmt.Println("Failed to create order")
 			return
 		}
-		fmt.Println("created order")
+		fmt.Println("Created order")
 	})
 	return err
 }

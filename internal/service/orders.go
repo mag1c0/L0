@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github.com/mag1c0/L0/internal/domain"
 	"github.com/mag1c0/L0/internal/repository"
 )
@@ -15,16 +14,14 @@ func NewOrdersService(repo repository.Orders) *OrdersService {
 	return &OrdersService{repo: repo}
 }
 
-func (s *OrdersService) GetByID(ctx context.Context, id string) (domain.Order, error) {
-	return s.repo.GetByID(ctx, id)
+func (s *OrdersService) GetByID(ctx context.Context, uid string) (*domain.Order, error) {
+	return s.repo.GetByID(ctx, uid)
 }
 
-func (s *OrdersService) GetAll(ctx context.Context) ([]domain.Order, error) {
+func (s *OrdersService) GetAll(ctx context.Context) (*[]domain.Order, error) {
 	return s.repo.GetAll(ctx)
 }
 
 func (s *OrdersService) CreateOrder(ctx context.Context, order domain.Order) error {
-	//TODO implement me
-	fmt.Println(order.OrderUID)
-	return nil
+	return s.repo.CreateOrder(ctx, order)
 }

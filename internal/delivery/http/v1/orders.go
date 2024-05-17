@@ -10,7 +10,7 @@ func (h *Handler) initOrdersRoutes(api chi.Router) {
 	api.Route("/orders", func(r chi.Router) {
 		r.Get("/", h.GetOrders)
 	})
-	api.Get("/{id}/", h.GetOrderByID)
+	api.Get("/{uid}/", h.GetOrderByID)
 }
 
 func (h *Handler) GetOrders(w http.ResponseWriter, r *http.Request) {
@@ -26,9 +26,9 @@ func (h *Handler) GetOrders(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) GetOrderByID(w http.ResponseWriter, r *http.Request) {
 	// search params
-	id := chi.URLParam(r, "id")
+	uid := chi.URLParam(r, "uid")
 
-	order, err := h.services.Orders.GetByID(r.Context(), id)
+	order, err := h.services.Orders.GetByID(r.Context(), uid)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(err.Error())
