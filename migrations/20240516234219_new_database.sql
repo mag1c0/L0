@@ -39,7 +39,7 @@ create table order_deliveries
     city      VARCHAR(100) NOT NULL,
     address   VARCHAR(100) NOT NULL,
     region    VARCHAR(100) NOT NULL,
-    email     VARCHAR(100) NOT NULL,
+    email     VARCHAR(100) NOT NULL
 );
 
 create table order_payments
@@ -53,13 +53,13 @@ create table order_payments
     bank          VARCHAR(100)  NOT NULL,
     delivery_cost INTEGER       NOT NULL,
     goods_total   INTEGER       NOT NULL,
-    custom_fee    INTEGER       NOT NULL,
+    custom_fee    INTEGER       NOT NULL
 );
 
 create table order_items
 (
     id           SERIAL PRIMARY KEY,
-    order_uid    VARCHAR(50) PRIMARY KEY REFERENCES orders (order_uid),
+    order_uid    VARCHAR(50) REFERENCES orders (order_uid),
     chrt_id      INTEGER      NOT NULL,
     track_number VARCHAR(100) NOT NULL,
     price        INTEGER      NOT NULL,
@@ -70,7 +70,7 @@ create table order_items
     total_price  INTEGER      NOT NULL,
     nm_id        INTEGER      NOT NULL,
     brand        VARCHAR(100) NOT NULL,
-    status       INTEGER      NOT NULL,
+    status       INTEGER      NOT NULL
 );
 
 COMMIT;
