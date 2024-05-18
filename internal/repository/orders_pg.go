@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/mag1c0/L0/internal/domain"
 	"github.com/mag1c0/L0/pkg/db"
@@ -185,7 +186,7 @@ func (r *OrdersRepo) CreateOrderPayment(ctx context.Context, order *domain.Order
 	builder := sq.Insert(paymentsTableName).
 		PlaceholderFormat(sq.Dollar).
 		Columns(transactionColumn, requestIdColumn, currencyColumn, providerColumn, amountColumn, paymentDtColumn, bankColumn, deliveryCostColumn, goodsTotalColumn, customFeeColumn).
-		Values(order.OrderUID, order.Payment.RequestId, order.Payment.Currency, order.Payment.Provider, order.Payment.PaymentDt, order.Payment.Bank, order.Payment.DeliveryCost, order.Payment.GoodsTotal, order.Payment.CustomFee)
+		Values(order.OrderUID, order.Payment.RequestId, order.Payment.Currency, order.Payment.Provider, order.Payment.Amount, order.Payment.PaymentDt, order.Payment.Bank, order.Payment.DeliveryCost, order.Payment.GoodsTotal, order.Payment.CustomFee)
 
 	query, args, err := builder.ToSql()
 	if err != nil {
@@ -207,6 +208,7 @@ func (r *OrdersRepo) CreateOrderPayment(ctx context.Context, order *domain.Order
 
 func (r *OrdersRepo) CreateOrderItem(ctx context.Context, order *domain.Order) error {
 	for _, item := range order.Items {
+		fmt.Println(item.NmId)
 		builder := sq.Insert(itemsTableName).
 			PlaceholderFormat(sq.Dollar).
 			Columns(orderUidColumn, chrtIdColumn, trackNumberColumn, priceColumn, ridColumn, nameProductColumn, saleColumn, sizeColumn, totalPriceColumn, nmIdColumn, brandColumn, statusColumn).

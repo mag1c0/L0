@@ -14,7 +14,7 @@ func GenerateOrder() domain.Order {
 
 	items := make([]domain.Item, 0)
 	items = append(items, domain.Item{
-		ChrtId:      gofakeit.Int(),
+		ChrtId:      gofakeit.Number(1000000, 10000000),
 		TrackNumber: trackNumber,
 		Price:       goodsTotal,
 		Rid:         gofakeit.UUID(),
@@ -22,7 +22,7 @@ func GenerateOrder() domain.Order {
 		Sale:        15,
 		Size:        "0",
 		TotalPrice:  goodsTotal,
-		NmId:        gofakeit.Int(),
+		NmId:        gofakeit.Number(1000000, 10000000),
 		Brand:       gofakeit.Company(),
 		Status:      202,
 	})
@@ -52,7 +52,7 @@ func GenerateOrder() domain.Order {
 			GoodsTotal:   goodsTotal,
 			CustomFee:    0,
 		},
-		Items:             nil,
+		Items:             items,
 		Locale:            "en",
 		InternalSignature: "",
 		CustomerId:        "test",
