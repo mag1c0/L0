@@ -1,4 +1,4 @@
-include .env
+include config.env
 LOCAL_BIN:=$(CURDIR)/bin
 export GOBIN ?= $(LOCAL_BIN)
 
