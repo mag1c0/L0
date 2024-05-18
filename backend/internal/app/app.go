@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	cache2 "github.com/mag1c0/L0/backend/internal/cache"
 	"github.com/mag1c0/L0/backend/internal/config"
 	"github.com/mag1c0/L0/backend/internal/delivery/amqp"
 	delivery "github.com/mag1c0/L0/backend/internal/delivery/http"
@@ -18,6 +19,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 )
@@ -44,12 +46,15 @@ func Run(ctx context.Context, configPath string) {
 	if err != nil {
 		log.Fatalf("Failed to create nats client: %v", err)
 	}
+	defer nsClient.Sc.Close()
 	fmt.Println("Nats connection success")
 
 	// Services, Repos & Handlers
+	cache := cache2.New()
 	repos := repository.NewRepositories(pgClient)
 	services := service.NewServices(service.Deps{
 		Repos: repos,
+		Cache: cache,
 	})
 	handlers := delivery.NewHandler(services)
 	consumers := amqp.NewConsumer(amqp.Deps{
@@ -57,7 +62,20 @@ func Run(ctx context.Context, configPath string) {
 		Stan:     nsClient.Sc,
 	})
 
+	wg := sync.WaitGroup{}
+	wg.Add(3)
+
 	go func() {
+		defer wg.Done()
+
+		if err := consumers.Orders.Subscribe(ctx, cfg.NATS.Subject); err != nil {
+			fmt.Printf("Failed to subscribe to subject %s", err)
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+
 		for {
 			order := generator.GenerateOrder()
 			fmt.Println("Generated order:", order.OrderUID)
@@ -74,20 +92,18 @@ func Run(ctx context.Context, configPath string) {
 		}
 	}()
 
-	go func() {
-		if err := consumers.Orders.Subscribe(ctx, cfg.NATS.Subject); err != nil {
-			fmt.Printf("Failed to subscribe to subject %s", err)
-		}
-	}()
-
 	// HTTP Server
 	srv := server.NewServer(cfg, handlers.Init())
 	go func() {
+		defer wg.Done()
+
 		if err := srv.Run(); !errors.Is(err, http.ErrServerClosed) {
 			fmt.Printf("Error occurred while running http server: %s\n", err.Error())
 		}
 	}()
 	fmt.Println("HTTP Server started")
+
+	wg.Wait()
 
 	// Graceful Shutdown
 	quit := make(chan os.Signal, 1)
@@ -96,10 +112,10 @@ func Run(ctx context.Context, configPath string) {
 	<-quit
 
 	const timeout = 5 * time.Second
-	ctx, shutdown := context.WithTimeout(context.Background(), timeout)
+	ctx, shutdown := context.WithTimeout(ctx, timeout)
 	defer shutdown()
 
 	if err := srv.Stop(ctx); err != nil {
-		fmt.Printf("failed to stop server: %v", err)
+		fmt.Printf("Failed to stop server: %v", err)
 	}
 }

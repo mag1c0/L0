@@ -1,5 +1,5 @@
 http:
-  port: 8000
+  port: 30016
   maxHeaderBytes: 1
   readTimeout: 10s
   writeTimeout: 10s
@@ -11,7 +11,7 @@ postgres:
   dsn: "host=localhost port=5432 dbname=wbdb user=wbdb password=dbwb sslmode=disable"
 
 nats:
-  url: 'nats://localhost:4222'
-  clusterID: 'test-cluster'
+  url: "nats://localhost:4222"
+  clusterID: "test-cluster"
   clientID: "order-listener"
   subject: "order-notification"

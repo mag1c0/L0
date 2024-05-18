@@ -25,6 +25,7 @@ func (h *Handler) Init() *chi.Mux {
 	router.Use(
 		middleware.Logger,
 		middleware.Recoverer,
+		corsMiddleware,
 	)
 
 	// Init router

@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/mag1c0/L0/backend/internal/domain"
 	"github.com/mag1c0/L0/backend/pkg/db"
@@ -320,7 +319,6 @@ func (r *OrdersRepo) CreateOrderPayment(ctx context.Context, order *domain.Order
 
 func (r *OrdersRepo) CreateOrderItem(ctx context.Context, order *domain.Order) error {
 	for _, item := range *order.Items {
-		fmt.Println(item.NmId)
 		builder := sq.Insert(itemsTableName).
 			PlaceholderFormat(sq.Dollar).
 			Columns(orderUidColumn, chrtIdColumn, trackNumberColumn, priceColumn, ridColumn, nameProductColumn, saleColumn, sizeColumn, totalPriceColumn, nmIdColumn, brandColumn, statusColumn).

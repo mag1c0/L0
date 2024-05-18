@@ -20,7 +20,6 @@ func NewOrdersConsumer(service service.Orders, stan stan.Conn) *OrdersConsumer {
 
 func (c *OrdersConsumer) Subscribe(ctx context.Context, subject string) error {
 	_, err := c.stan.Subscribe(subject, func(msg *stan.Msg) {
-		fmt.Println("Received message")
 		var order domain.Order
 		if err := json.Unmarshal(msg.Data, &order); err != nil {
 			fmt.Println("Failed to unmarshal json")
@@ -30,7 +29,7 @@ func (c *OrdersConsumer) Subscribe(ctx context.Context, subject string) error {
 			fmt.Println("Failed to create order")
 			return
 		}
-		fmt.Println("Created order")
 	})
+
 	return err
 }

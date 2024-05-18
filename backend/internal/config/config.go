@@ -1,7 +1,9 @@
 package config
 
 import (
+	"fmt"
 	"github.com/spf13/viper"
+	"os"
 	"time"
 )
 
@@ -46,6 +48,8 @@ func Init(configsDir string) (*Config, error) {
 		return nil, err
 	}
 
+	setFromEnv(&cfg)
+
 	return &cfg, nil
 }
 
@@ -74,4 +78,13 @@ func unmarshal(cfg *Config) error {
 	}
 
 	return nil
+}
+
+func setFromEnv(cfg *Config) {
+	if os.Getenv("DB_HOST") != "" {
+		cfg.POSTGRES.Dsn = fmt.Sprintf("host=%s port=%s dbname=wbdb user=wbdb password=dbwb sslmode=disable", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"))
+	}
+	if os.Getenv("NATS_HOST") != "" {
+		cfg.NATS.Url = fmt.Sprintf("nats://%s:%s", os.Getenv("NATS_HOST"), os.Getenv("NATS_PORT"))
+	}
 }
