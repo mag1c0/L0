@@ -31,7 +31,7 @@ func GenerateOrder() domain.Order {
 		OrderUID:    orderUID,
 		TrackNumber: trackNumber,
 		Entry:       "WBIL",
-		Delivery: domain.Delivery{
+		Delivery: &domain.Delivery{
 			Name:    gofakeit.Name(),
 			Phone:   gofakeit.Phone(),
 			Zip:     gofakeit.Address().Zip,
@@ -40,7 +40,7 @@ func GenerateOrder() domain.Order {
 			Region:  gofakeit.Address().Country,
 			Email:   gofakeit.Email(),
 		},
-		Payment: domain.Payment{
+		Payment: &domain.Payment{
 			Transaction:  orderUID,
 			RequestId:    "",
 			Currency:     "USD",
@@ -52,7 +52,7 @@ func GenerateOrder() domain.Order {
 			GoodsTotal:   goodsTotal,
 			CustomFee:    0,
 		},
-		Items:             items,
+		Items:             &items,
 		Locale:            "en",
 		InternalSignature: "",
 		CustomerId:        "test",

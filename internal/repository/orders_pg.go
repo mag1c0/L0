@@ -116,7 +116,104 @@ func (r *OrdersRepo) GetAll(ctx context.Context) (*[]domain.Order, error) {
 		return nil, err
 	}
 
+	for i := range list {
+		list[i].Delivery, err = r.GetDeliveryByID(ctx, list[i].OrderUID)
+		if err != nil {
+			return nil, err
+		}
+
+		list[i].Payment, err = r.GetPaymentByID(ctx, list[i].OrderUID)
+		if err != nil {
+			return nil, err
+		}
+
+		list[i].Items, err = r.GetItemsByID(ctx, list[i].OrderUID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &list, nil
+}
+
+func (r *OrdersRepo) GetDeliveryByID(ctx context.Context, uid string) (*domain.Delivery, error) {
+	builder := sq.Select(nameColumn, phoneColumn, zipColumn, cityColumn, addressColumn, regionColumn, emailColumn).
+		PlaceholderFormat(sq.Dollar).
+		From(deliveriesTableName).
+		Where(sq.Eq{orderUidColumn: uid}).
+		Limit(1)
+
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	q := db.Query{
+		Name:     "orders_repository.GetDeliveryByID",
+		QueryRaw: query,
+	}
+
+	var delivery domain.Delivery
+
+	err = r.db.DB().ScanOneContext(ctx, &delivery, q, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	return &delivery, nil
+}
+
+func (r *OrdersRepo) GetPaymentByID(ctx context.Context, uid string) (*domain.Payment, error) {
+	builder := sq.Select(transactionColumn, requestIdColumn, currencyColumn, providerColumn, amountColumn, paymentDtColumn, bankColumn, deliveryCostColumn, goodsTotalColumn, customFeeColumn).
+		PlaceholderFormat(sq.Dollar).
+		From(paymentsTableName).
+		Where(sq.Eq{transactionColumn: uid}).
+		Limit(1)
+
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	q := db.Query{
+		Name:     "orders_repository.GetPaymentByID",
+		QueryRaw: query,
+	}
+
+	var payment domain.Payment
+
+	err = r.db.DB().ScanOneContext(ctx, &payment, q, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	return &payment, nil
+}
+
+func (r *OrdersRepo) GetItemsByID(ctx context.Context, uid string) (*[]domain.Item, error) {
+	builder := sq.Select(chrtIdColumn, trackNumberColumn, priceColumn, ridColumn, nameProductColumn, saleColumn, sizeColumn, totalPriceColumn, nmIdColumn, brandColumn, statusColumn).
+		PlaceholderFormat(sq.Dollar).
+		From(itemsTableName).
+		Where(sq.Eq{orderUidColumn: uid})
+
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	q := db.Query{
+		Name:     "orders_repository.GetItemsByID",
+		QueryRaw: query,
+	}
+
+	listItem := make([]domain.Item, 0)
+
+	err = r.db.DB().ScanAllContext(ctx, &listItem, q, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	return &listItem, nil
 }
 
 func (r *OrdersRepo) CreateOrder(ctx context.Context, order *domain.Order) error {
@@ -207,7 +304,7 @@ func (r *OrdersRepo) CreateOrderPayment(ctx context.Context, order *domain.Order
 }
 
 func (r *OrdersRepo) CreateOrderItem(ctx context.Context, order *domain.Order) error {
-	for _, item := range order.Items {
+	for _, item := range *order.Items {
 		fmt.Println(item.NmId)
 		builder := sq.Insert(itemsTableName).
 			PlaceholderFormat(sq.Dollar).
