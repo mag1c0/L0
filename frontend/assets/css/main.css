@@ -1,0 +1,46 @@
+#__layout, #__nuxt {
+    height: 100%
+}
+
+#app {
+    transition: opacity .5s ease;
+    min-height: 100%;
+    display: flex;
+    flex-flow: column nowrap
+}
+
+html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color: #1a1a1a
+}
+
+body, html {
+    height: 100%;
+    width: 100%
+}
+
+body {
+    margin: 0;
+    font-family: Montserrat, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    background-color:#000;
+    color:#fff;
+}
+
+h1, h2, h3, h4 {
+    font-weight: 500
+}
+
+.container {
+    margin: 0 auto;
+    padding: 0 20px;
+    width: 100%;
+    max-width: 1368px;
+    box-sizing: border-box
+}
+
+a {
+    text-decoration: none
+}
