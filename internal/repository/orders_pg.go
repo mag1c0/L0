@@ -91,6 +91,21 @@ func (r *OrdersRepo) GetByID(ctx context.Context, uid string) (*domain.Order, er
 		return nil, err
 	}
 
+	order.Delivery, err = r.GetDeliveryByID(ctx, order.OrderUID)
+	if err != nil {
+		return nil, err
+	}
+
+	order.Payment, err = r.GetPaymentByID(ctx, order.OrderUID)
+	if err != nil {
+		return nil, err
+	}
+
+	order.Items, err = r.GetItemsByID(ctx, order.OrderUID)
+	if err != nil {
+		return nil, err
+	}
+
 	return &order, nil
 }
 
